@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDEAL 理想保險 - 智能建議書試算</title>
+    <style>
+        /* --- CSS 樣式區 --- */
+        :root {
+            --primary-color: #E65100; /* 深橘色 */
+            --accent-color: #FB8C00;  /* 亮橘色 */
+            --light-bg: #FFF3E0;      /* 淺橘背景 */
+            --text-color: #333;
+            --warning-text: #757575;
+            --success-color: #2e7d32;
+            --danger-color: #c62828;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "Heiti TC", sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fafafa;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* 標題區 */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        header h1 { margin: 0; font-size: 1.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        header p { margin: 5px 0 0; font-size: 0.9rem; opacity: 0.95; }
+
+        /* 容器設定 */
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 15px;
+            padding-bottom: 80px;
+        }
+
+        /* 卡片樣式 */
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+            border-top: 4px solid var(--accent-color);
+        }
+
+        .card-title {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            font-weight: bold;
+        }
+
+        /* 引發興趣列表 */
+        .hook-list li {
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #444;
+            list-style-type: none;
+            padding-left: 10px;
+            border-left: 3px solid var(--accent-color);
+        }
+        .highlight { color: #D84315; font-weight: 800; }
+
+        /* 輸入欄位樣式 */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.95rem; color: #444; }
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 5px rgba(251, 140, 0, 0.3);
+        }
+
+        /* 按鈕群組 */
+        .radio-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .radio-label {
+            flex: 1; text-align: center; padding: 10px;
+            border: 1px solid #ddd; border-radius: 5px;
+            cursor: pointer; font-weight: bold; transition: all 0.2s;
+            background: #f9f9f9; color: #666;
+            font-size: 0.9rem;
+        }
+        .radio-input { display: none; }
+        .radio-input:checked + .radio-label {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* 模式切換 Tabs */
+        .mode-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        .mode-tab {
+            flex: 1; text-align: center; padding: 12px;
+            cursor: pointer; font-weight: bold; color: #999;
+            border-bottom: 3px solid transparent; transition: all 0.3s;
+        }
+        .mode-tab.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+            background-color: #FFF3E0;
+        }
+
+        /* 隱藏區塊控制 */
+        .input-section { display: none; }
+        .input-section.active { display: block; }
+        
+        /* 年期輸入區塊 (Flex排版) */
+        .years-row { display: flex; gap: 10px; }
+        .years-col { flex: 1; }
+
+        /* 建議文字區塊 (動態) */
+        .advice-box {
+            font-size: 0.95rem; 
+            color: #5D4037; 
+            margin-top:10px; 
+            font-weight:normal; 
+            background: #FFECB3; 
+            padding: 15px; 
+            border-radius: 5px; 
+            border-left: 5px solid #FFC107;
+            display: none;
+            line-height: 1.6;
+        }
+        .advice-section-title {
+            font-weight: bold;
+            color: #E65100;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* 槓桿區塊 */
+        .advanced-section {
+            background-color: #FFF8E1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px dashed var(--accent-color);
+            display: none;
+        }
+
+        /* 切換開關 */
+        .toggle-container {
+            display: flex; align-items: center;
+            margin-bottom: 15px; cursor: pointer;
+            padding: 12px; background: #fff;
+            border: 1px solid #eee; border-radius: 5px;
+        }
+        .toggle-checkbox { width: 18px; height: 18px; margin-right: 10px; cursor: pointer; accent-color: var(--primary-color); }
+        .toggle-label { font-weight: bold; color: var(--text-color); cursor: pointer; }
+
+        /* 按鈕 */
+        .btn {
+            display: block; width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            color: white; border: none; border-radius: 50px;
+            font-size: 1.1rem; cursor: pointer; font-weight: bold;
+            box-shadow: 0 4px 6px rgba(230, 81, 0, 0.3); transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.98); }
+
+        /* 結果顯示區 */
+        .result-box {
+            background-color: #FFF3E0; border: 1px solid #FFCC80;
+            padding: 20px; border-radius: 8px; text-align: center;
+            margin-top: 20px; display: none;
+        }
+        .result-row {
+            display: flex; justify-content: space-between;
+            margin-bottom: 10px; font-size: 0.95rem;
+            border-bottom: 1px dashed #e0e0e0; padding-bottom: 8px;
+        }
+        .result-value { font-weight: bold; color: #333; }
+        
+        .big-number {
+            font-size: 2.2rem; color: var(--primary-color);
+            font-weight: 800; margin: 10px 0;
+            font-family: Arial, sans-serif; line-height: 1.1;
+        }
+
+        /* 警示文字 */
+        .disclaimer-box {
+            margin-top: 30px; padding: 15px;
+            background-color: #f5f5f5; border-top: 2px solid #ddd;
+            font-size: 0.75rem; color: var(--warning-text);
+            line-height: 1.4; text-align: justify;
+        }
+        .disclaimer-box h4 { margin: 0 0 5px 0; font-size: 0.85rem; color: #444; }
+        .disclaimer-box ul { padding-left: 20px; margin: 0; }
+
+        footer { text-align: center; padding: 20px; font-size: 0.8rem; color: #999; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>IDEAL 理想保險</h1>
+        <p>YOUR FUTURE AS YOU WANT</p>
+    </header>
+
+    <div class="container">
+        
+        <div class="card">
+            <h2 class="card-title">您想過這樣的未來嗎？</h2>
+            <ul class="hook-list">
+                <li>每年 <span class="highlight">6-8%</span> 類定存收益，您有興趣嗎？</li>
+                <li>讓專業的基金經理人幫您累積財富。</li>
+                <li>投資同時享有高額壽險身價，資產傳承更安心。</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">步驟 1：規劃目標</h2>
+            <div class="form-group">
+                <label for="userAge">您的年齡：</label>
+                <input type="number" id="userAge" value="40" placeholder="例如：40" oninput="renderSmartAdvice()">
+            </div>
+            
+            <div class="form-group">
+                <label for="investmentGoal" style="color:var(--primary-color); font-size:1.1rem;">您的投資主要目標？</label>
+                <select id="investmentGoal" onchange="applyInvestmentGoal()">
+                    <option value="none">-- 選擇目標以獲得專業配置建議 --</option>
+                    <option value="cashflow">1. 創造退休現金流 (替代薪資)</option>
+                    <option value="legacy">2. 稅務規劃與資產傳承 (預留稅源)</option>
+                    <option value="accumulation">3. 資產快速增值 (購屋/圓夢)</option>
+                </select>
+            </div>
+            
+            <div id="advice-text" class="advice-box"></div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">步驟 2：投資與試算</h2>
+            
+            <div class="mode-tabs">
+                <div class="mode-tab active" onclick="switchMode('lumpSum')" id="tabLumpSum">單筆投入 (整筆存)</div>
+                <div class="mode-tab" onclick="switchMode('regular')" id="tabRegular">定期定額 (月月存)</div>
+            </div>
+
+            <div id="inputLumpSum" class="input-section active">
+                <div class="form-group">
+                    <label for="principal">單筆投入本金 (元)：</label>
+                    <input type="number" id="principal" value="1000000" step="10000">
+                </div>
+            </div>
+
+            <div id="inputRegular" class="input-section">
+                <div class="form-group">
+                    <label for="monthlyAmount">每月投入金額 (元)：</label>
+                    <input type="number" id="monthlyAmount" value="5000" step="1000">
+                    <small style="color:#666;">※ 每月持續扣款投資</small>
+                </div>
+            </div>
+
+             <div class="form-group">
+                <label for="insuranceAmount">希望壽險保額 (元)：</label>
+                <input type="number" id="insuranceAmount" value="3000000" step="100000">
+                <small style="color:#666;">※ 將依年齡自動扣除對應的危險保費 (甲型)</small>
+            </div>
+
+            <div class="form-group">
+                <label>獲利運用方式：</label>
+                <div class="radio-group">
+                    <input type="radio" id="typeCash" name="payoutType" class="radio-input" value="cash" checked>
+                    <label for="typeCash" class="radio-label">每月領現 (現金流)</label>
+                    
+                    <input type="radio" id="typeCompound" name="payoutType" class="radio-input" value="compound">
+                    <label for="typeCompound" class="radio-label">複利滾存 (資產增值)</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="rate">預估年化報酬率 (%)：</label>
+                <input type="number" id="rate" value="6.0" step="0.1">
+                <small style="color:#999;">※ 請手動輸入預估數值 (如：基金配息率)</small>
+            </div>
+
+            <div id="yearsInputContainer">
+                </div>
+
+            <div id="leverageWrapper">
+                <div class="toggle-container" onclick="toggleLeverage()">
+                    <input type="checkbox" id="leverageToggle" class="toggle-checkbox">
+                    <span class="toggle-label">開啟「槓桿/貸款」試算 (進階)</span>
+                </div>
+
+                <div id="leverageSection" class="advanced-section">
+                    <div class="form-group">
+                        <label>資金用途：</label>
+                        <div class="radio-group">
+                            <input type="radio" id="loanInvest" name="loanType" class="radio-input" value="invest" checked>
+                            <label for="loanInvest" class="radio-label">貸款再投入 (槓桿套利)</label>
+                            
+                            <input type="radio" id="loanKeep" name="loanType" class="radio-input" value="keep">
+                            <label for="loanKeep" class="radio-label">貸款不投入 (僅扣利息)</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loanAmount">貸款金額 (元)：</label>
+                        <input type="number" id="loanAmount" value="1000000" step="10000">
+                        <small style="color:#795548;">(例如：房貸增貸、保單借款)</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="loanRate">貸款年利率 (%)：</label>
+                        <input type="number" id="loanRate" value="2.5" step="0.1">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn" onclick="calculate()">開始試算</button>
+
+            <div class="result-box" id="resultArea">
+                
+                <h3 style="margin-top:0; color: var(--primary-color);">試算結果 (<span id="resYearLabel">10</span>年後)</h3>
+
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid var(--accent-color); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <div style="font-size: 1rem; color: #666; font-weight:bold;">總資產效益 (本金+獲利)</div>
+                    <div style="font-size: 0.8rem; color: #999; margin-bottom: 5px;">(含：帳戶餘額 + 累積已領現金)</div>
+                    
+                    <div class="big-number" id="resTotalBenefit">NT$ 0</div>
+
+                    <div style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px; font-size: 0.9rem;">
+                        <div class="result-row">
+                            <span>累積投入本金</span>
+                            <span class="result-value" id="resPrincipal">NT$ 0</span>
+                        </div>
+                        <div class="result-row" style="color: var(--success-color);">
+                            <span>累積淨獲利</span>
+                            <span class="result-value" id="resNetProfit">NT$ 0</span>
+                        </div>
+                        <div id="loanCostRow" class="result-row" style="color: var(--danger-color); display:none;">
+                            <span>(已扣除累積貸款利息)</span>
+                            <span class="result-value" id="resTotalLoanInterest">- NT$ 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; text-align:left;">
+                    <h4 style="margin:0 0 10px 0; color: var(--primary-color); border-bottom: 2px solid #eee; padding-bottom:5px;">資產分佈明細</h4>
+                    
+                    <div class="result-row">
+                        <span>A. 保單帳戶餘額</span>
+                        <span class="result-value" id="resAccountValue">NT$ 0</span>
+                    </div>
+                    
+                    <div class="result-row">
+                        <span>B. 累積已領現金</span>
+                        <span class="result-value" id="resTotalDraw">NT$ 0</span>
+                    </div>
+                    
+                    <div id="monthlyDrawRow" class="result-row" style="background:#FFF3E0; padding:5px; border-radius:4px; margin-top:5px; display:none;">
+                        <span style="font-weight:bold; color:var(--primary-color);">平均每月約領</span>
+                        <span class="result-value" id="resMonthlyDraw" style="color:var(--primary-color);">NT$ 0</span>
+                    </div>
+                </div>
+
+                <div style="background: #E8F5E9; padding: 15px; border-radius: 8px; border: 1px solid #C8E6C9;">
+                    <div style="font-size: 0.9rem; color: #2E7D32; margin-bottom: 5px; font-weight:bold;">身故總給付 (家人保障)</div>
+                    <div class="big-number" id="resDeathBenefit" style="color: #2E7D32; font-size: 1.8rem;">NT$ 0</div>
+                    <div class="result-row">
+                        <span>規劃壽險保額</span>
+                        <span class="result-value" id="resSumAssured">NT$ 0</span>
+                    </div>
+                     <div class="result-row" style="font-size:0.8rem; color:#666;">
+                        <span>*若帳戶價值高於保額，依帳戶價值給付 (甲型)</span>
+                    </div>
+                </div>
+
+                <div id="roeBlock" style="margin-top: 15px; padding-top: 10px; border-top: 2px solid var(--accent-color); display:none;">
+                    <div class="result-row">
+                        <span>自有資金年化報酬率 (ROE)</span>
+                        <span class="result-value" id="resROE" style="font-size: 1.5rem; color: var(--primary-color);">0%</span>
+                    </div>
+                    <small style="color:#666;">(已扣除貸款利息成本)</small>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="disclaimer-box">
+            <h4>注意事項與風險揭露：</h4>
+            <ul>
+                <li><strong>總資產效益說明：</strong>上述金額為「保單帳戶餘額」加上「累積已領回之現金」。若選擇每月領現，帳戶餘額可能因扣除保費與配息而低於原始本金。</li>
+                <li><strong>定期定額：</strong>試算假設每月期初投入。若設定「繳費年期」小於「總持有年期」，期滿後不再投入資金，但帳戶價值持續依預估報酬率複利滾存並扣除保險成本。</li>
+                <li><strong>保險成本扣除：</strong>本試算已模擬「危險保費」隨年齡增長之扣除機制 (假設甲型壽險)，且帳戶價值越高，危險保費扣除越少。</li>
+                <li><strong>投資風險：</strong>本試算報酬率僅供參考，不代表未來績效，保戶需自負投資盈虧。基金配息來源可能為本金。</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>Copyright © IDEAL 理想保險</p>
+    </footer>
+
+    <script>
+        /* --- JavaScript 核心邏輯區 --- */
+
+        let currentMode = 'lumpSum';
+
+        window.onload = function() {
+            renderTimeInputs();
+            renderSmartAdvice(); // 初始載入也執行一次建議
+        };
+
+        // --- 核心功能：雙重建議系統 (Smart Advice) ---
+        function renderSmartAdvice() {
+            const age = parseInt(document.getElementById('userAge').value);
+            const goal = document.getElementById('investmentGoal').value;
+            const adviceBox = document.getElementById('advice-text');
+            
+            let htmlContent = "";
+
+            // 1. 年齡建議 (恢復您喜歡的功能)
+            if (age) {
+                let ageAdvice = "";
+                if (age >= 18 && age <= 35) {
+                    ageAdvice = "💡 <strong>青年階段建議 (18-35歲)：</strong><br>距離退休時間長，適合選擇<strong>積極型配置 (ETF/股票型基金)</strong>，利用時間複利加速資產累積。";
+                } else if (age >= 36 && age <= 55) {
+                    ageAdvice = "💡 <strong>壯年階段建議 (36-55歲)：</strong><br>家庭責任重，建議<strong>股債平衡配置</strong>，同時兼顧資產累積與家庭保障。";
+                } else if (age > 55) {
+                    ageAdvice = "💡 <strong>退休階段建議 (55歲+)：</strong><br>建議以<strong>「穩定現金流」</strong>與保守型資產為主，創造源源不絕的被動收入。";
+                }
+                htmlContent += `<div style="margin-bottom:10px;">${ageAdvice}</div>`;
+            }
+
+            // 2. 目標建議 (如果用戶有選目標)
+            if (goal !== 'none') {
+                let goalAdvice = "";
+                if (goal === 'cashflow') {
+                    goalAdvice = "<span class='advice-section-title'>針對【退休現金流】配置：</span>建議單筆投入 200 萬以上，並選擇「每月領現」，創造替代薪資。";
+                } else if (goal === 'legacy') {
+                    goalAdvice = "<span class='advice-section-title'>針對【資產傳承】配置：</span>建議提高壽險保額 (1,000萬+)，利用甲型保單特性與複利滾存，預留稅源並放大身價。";
+                } else if (goal === 'accumulation') {
+                    goalAdvice = "<span class='advice-section-title'>針對【資產增值】配置：</span>建議利用「定期定額」搭配「複利滾存」，透過時間平攤成本，適合累積教育金。";
+                }
+                // 加上分隔線，疊加顯示
+                if(htmlContent !== "") htmlContent += "<hr style='border:0; border-top:1px dashed #D7CCC8; margin:8px 0;'>";
+                htmlContent += `<div>${goalAdvice}</div>`;
+            }
+
+            // 顯示邏輯
+            if (htmlContent !== "") {
+                adviceBox.style.display = 'block';
+                adviceBox.innerHTML = htmlContent;
+            } else {
+                adviceBox.style.display = 'none';
+            }
+        }
+
+        // --- 目標連動設定 (自動帶入參數) ---
+        function applyInvestmentGoal() {
+            const goal = document.getElementById('investmentGoal').value;
+            
+            // 欄位 DOM
+            const principalInput = document.getElementById('principal');
+            const insuranceInput = document.getElementById('insuranceAmount');
+            const typeCashRadio = document.getElementById('typeCash');
+            const typeCompoundRadio = document.getElementById('typeCompound');
+            
+            if (goal === 'cashflow') {
+                switchMode('lumpSum');
+                principalInput.value = 2000000;
+                typeCashRadio.checked = true;
+            } else if (goal === 'legacy') {
+                switchMode('lumpSum');
+                insuranceInput.value = 10000000; 
+                typeCompoundRadio.checked = true;
+            } else if (goal === 'accumulation') {
+                switchMode('regular'); 
+                typeCompoundRadio.checked = true;
+            }
+            
+            renderTimeInputs();
+            renderSmartAdvice(); // 更新建議文字
+        }
+
+        // --- 模式切換 ---
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('tabLumpSum').className = mode === 'lumpSum' ? 'mode-tab active' : 'mode-tab';
+            document.getElementById('tabRegular').className = mode === 'regular' ? 'mode-tab active' : 'mode-tab';
+            document.getElementById('inputLumpSum').className = mode === 'lumpSum' ? 'input-section active' : 'input-section';
+            document.getElementById('inputRegular').className = mode === 'regular' ? 'input-section active' : 'input-section';
+
+            const leverageWrapper = document.getElementById('leverageWrapper');
+            if (mode === 'regular') {
+                leverageWrapper.style.display = 'none';
+                document.getElementById('leverageToggle').checked = false;
+                document.getElementById('leverageSection').style.display = 'none';
+            } else {
+                leverageWrapper.style.display = 'block';
+            }
+            renderTimeInputs();
+        }
+
+        // --- 年期輸入框渲染 ---
+        function renderTimeInputs() {
+            const container = document.getElementById('yearsInputContainer');
+            if (currentMode === 'lumpSum') {
+                container.innerHTML = `
+                    <div class="form-group">
+                        <label for="totalYears">試算總持有年期 (年)：</label>
+                        <input type="number" id="totalYears" value="10" step="1">
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="years-row">
+                        <div class="years-col form-group">
+                            <label for="payYears">預計繳費年期 (年)：</label>
+                            <input type="number" id="payYears" value="20" step="1">
+                        </div>
+                        <div class="years-col form-group">
+                            <label for="totalYears">總持有年期 (年)：</label>
+                            <input type="number" id="totalYears" value="25" step="1">
+                            <small style="color:#666; font-size:0.8rem;">(包含後續滾存時間)</small>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // --- 危險保費試算 ---
+        function getMonthlyCOIRate(age) {
+            let baseRate = 1.5; 
+            if (age < 20) return 0.5;
+            let rate = baseRate * Math.pow(1.08, (age - 30));
+            return rate > 0 ? rate : 0.5;
+        }
+
+        function toggleLeverage() {
+            const isChecked = document.getElementById('leverageToggle').checked;
+            document.getElementById('leverageSection').style.display = isChecked ? 'block' : 'none';
+        }
+
+        // --- 核心計算 ---
+        function calculate() {
+            let age = parseInt(document.getElementById('userAge').value) || 40;
+            let sumAssured = parseFloat(document.getElementById('insuranceAmount').value) || 0;
+            let rate = parseFloat(document.getElementById('rate').value) || 0;
+            let payoutType = document.querySelector('input[name="payoutType"]:checked').value;
+            
+            let totalYears = parseInt(document.getElementById('totalYears').value) || 10;
+            let payYears = totalYears; 
+            
+            if (currentMode === 'regular') {
+                payYears = parseInt(document.getElementById('payYears').value) || totalYears;
+                if (payYears > totalYears) {
+                    alert("注意：「繳費年期」不能大於「總持有年期」，已自動將總年期調整為繳費年期。");
+                    totalYears = payYears;
+                    document.getElementById('totalYears').value = totalYears;
+                }
+            }
+
+            let isLeverage = (currentMode === 'lumpSum') && document.getElementById('leverageToggle').checked;
+            let loanType = document.querySelector('input[name="loanType"]:checked').value; 
+            let loanAmount = isLeverage ? (parseFloat(document.getElementById('loanAmount').value) || 0) : 0;
+            let loanRate = isLeverage ? (parseFloat(document.getElementById('loanRate').value) || 0) : 0;
+
+            let principal = 0;
+            let monthlyPremium = 0;
+
+            if (currentMode === 'lumpSum') {
+                principal = parseFloat(document.getElementById('principal').value) || 0;
+            } else {
+                monthlyPremium = parseFloat(document.getElementById('monthlyAmount').value) || 0;
+                principal = 0; 
+            }
+
+            let initialPolicyValue = principal;
+            if (currentMode === 'lumpSum' && isLeverage && loanType === 'invest') {
+                initialPolicyValue += loanAmount;
+            }
+
+            let currentAccountValue = initialPolicyValue;
+            let totalCashDraw = 0; 
+            let totalLoanInterestPaid = 0;
+            let accumulatedPrincipal = principal; 
+
+            let months = totalYears * 12;
+            let payMonths = payYears * 12;
+            let monthlyInvestRate = (rate / 100) / 12;
+            let monthlyLoanRate = (loanRate / 100) / 12;
+
+            for (let m = 0; m < months; m++) {
+                let currentAge = age + Math.floor(m / 12);
+
+                if (currentMode === 'regular' && m < payMonths) {
+                    currentAccountValue += monthlyPremium;
+                    accumulatedPrincipal += monthlyPremium;
+                }
+
+                let gain = currentAccountValue * monthlyInvestRate;
+
+                let riskAmount = Math.max(sumAssured - currentAccountValue, 0);
+                let coiRate = getMonthlyCOIRate(currentAge); 
+                let costOfInsurance = (riskAmount / 10000) * coiRate;
+
+                let loanInterest = loanAmount * monthlyLoanRate;
+                totalLoanInterestPaid += loanInterest;
+
+                currentAccountValue += gain; 
+                currentAccountValue -= costOfInsurance; 
+
+                if (payoutType === 'cash') {
+                    let targetDraw = currentAccountValue * monthlyInvestRate; 
+                    currentAccountValue -= targetDraw; 
+                    
+                    if (isLeverage) {
+                        let netDraw = targetDraw - loanInterest;
+                        totalCashDraw += netDraw; 
+                    } else {
+                        totalCashDraw += targetDraw;
+                    }
+                } else {
+                    if (isLeverage) {
+                        currentAccountValue -= loanInterest;
+                    }
+                }
+            }
+
+            document.getElementById('resAccountValue').innerText = "NT$ " + Math.round(currentAccountValue).toLocaleString();
+            document.getElementById('resTotalDraw').innerText = "NT$ " + Math.round(totalCashDraw).toLocaleString();
+
+            let totalBenefit = currentAccountValue + totalCashDraw;
+            document.getElementById('resTotalBenefit').innerText = "NT$ " + Math.round(totalBenefit).toLocaleString();
+
+            document.getElementById('resPrincipal').innerText = "NT$ " + Math.round(accumulatedPrincipal).toLocaleString();
+
+            let netProfit = 0;
+            if (isLeverage && loanType === 'invest') {
+                netProfit = totalBenefit - accumulatedPrincipal - loanAmount;
+            } else {
+                netProfit = totalBenefit - accumulatedPrincipal;
+            }
+
+            document.getElementById('resNetProfit').innerText = (netProfit >= 0 ? "+" : "") + "NT$ " + Math.round(netProfit).toLocaleString();
+
+            if (isLeverage) {
+                document.getElementById('loanCostRow').style.display = 'flex';
+                document.getElementById('resTotalLoanInterest').innerText = "- NT$ " + Math.round(totalLoanInterestPaid).toLocaleString();
+            } else {
+                document.getElementById('loanCostRow').style.display = 'none';
+            }
+
+            if(payoutType === 'cash') {
+                document.getElementById('monthlyDrawRow').style.display = 'flex';
+                document.getElementById('resMonthlyDraw').innerText = "NT$ " + Math.round(totalCashDraw / months).toLocaleString();
+            } else {
+                document.getElementById('monthlyDrawRow').style.display = 'none';
+            }
+
+            let deathBenefit = Math.max(sumAssured, currentAccountValue);
+            document.getElementById('resDeathBenefit').innerText = "NT$ " + Math.round(deathBenefit).toLocaleString();
+            document.getElementById('resSumAssured').innerText = "NT$ " + Math.round(sumAssured).toLocaleString();
+
+            if (currentMode === 'lumpSum' && accumulatedPrincipal > 0) {
+                 document.getElementById('roeBlock').style.display = 'block';
+                 let annualizedROE = (netProfit / totalYears / accumulatedPrincipal) * 100;
+                 document.getElementById('resROE').innerText = annualizedROE.toFixed(2) + "%";
+            } else {
+                document.getElementById('roeBlock').style.display = 'none';
+            }
+
+            document.getElementById('resYearLabel').innerText = totalYears;
+            document.getElementById('resultArea').style.display = 'block';
+            document.getElementById('resultArea').scrollIntoView({behavior: "smooth"});
+        }
+    </script>
+</body>
+</html>
