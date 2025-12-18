@@ -23,7 +23,7 @@
             background-color: #fafafa;
             color: var(--text-color);
             line-height: 1.6;
-            -webkit-text-size-adjust: 100%; /* 禁止手機自動調整字體 */
+            -webkit-text-size-adjust: 100%;
         }
 
         /* 標題區 */
@@ -80,7 +80,7 @@
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.95rem; color: #444; }
         input[type="number"], select {
             width: 100%;
-            padding: 12px; /* 手機版按鈕加大好點 */
+            padding: 12px;
             border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 1rem;
@@ -204,36 +204,53 @@
             font-family: Arial, sans-serif; line-height: 1.1;
         }
 
-        /* --- 這裡就是「月領金額」的專屬設定 --- */
+        /* --- 修正後的月領金額區塊 (電腦版預設) --- */
         #monthlyDrawRow {
             background: #FFF3E0;
-            padding: 20px; /* 加大內距 */
+            padding: 20px;
             border-radius: 10px;
             margin-top: 15px;
-            display: none;
+            display: none; /* JS 控制顯示 */
             align-items: center;
-            border: 2px solid var(--accent-color); /* 加個邊框更明顯 */
+            justify-content: space-between; /* 電腦版左右撐開 */
+            border: 2px solid var(--accent-color);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         #resMonthlyDraw {
             color: var(--primary-color);
-            font-size: 2rem; /* 電腦版預設大小 */
+            font-size: 2rem;
             font-weight: 800;
         }
 
-        /* --- 手機版專用放大區 (Media Query) --- */
+        /* --- 手機版專用 (排版大修正) --- */
         @media screen and (max-width: 600px) {
-            /* 在手機上強制放大這些數字 */
-            #resMonthlyDraw {
-                font-size: 2.5rem !important; /* 強制放大到 2.5倍 */
+            /* 1. 將該區塊改為「垂直堆疊」 */
+            #monthlyDrawRow {
+                flex-direction: column; /* 上下排列 */
+                justify-content: center;
+                text-align: center; /* 文字置中 */
+                padding: 15px;
             }
+
+            /* 2. 標籤文字 (平均每月約領) */
+            #monthlyDrawRow span:first-child {
+                font-size: 1.1rem !important;
+                margin-bottom: 5px; /* 與下方數字拉開距離 */
+                width: 100%;
+                display: block;
+            }
+
+            /* 3. 數字金額 (NT$ 9,908) */
+            #resMonthlyDraw {
+                font-size: 2.5rem !important; /* 數字維持超大 */
+                width: 100%;
+                display: block;
+                line-height: 1.2;
+            }
+            
             .big-number {
                 font-size: 2.5rem !important;
-            }
-            /* 調整標籤文字大小 */
-            #monthlyDrawRow span:first-child {
-                font-size: 1.2rem !important;
             }
         }
 
@@ -406,7 +423,7 @@
                         <span class="result-value" id="resTotalDraw">NT$ 0</span>
                     </div>
                     
-                    <div id="monthlyDrawRow">
+                    <div id="monthlyDrawRow" class="result-row">
                         <span style="font-weight:bold; color:var(--primary-color); font-size: 1.1rem;">平均每月約領</span>
                         <span id="resMonthlyDraw">NT$ 0</span>
                     </div>
@@ -692,6 +709,7 @@
             }
 
             if(payoutType === 'cash') {
+                // 原本是用 .style.display = 'flex'，但為了手機版我們改成 block 或 flex 皆可，但為了排版邏輯，這邊使用 display:flex 搭配 CSS 中的 media query 調整方向
                 document.getElementById('monthlyDrawRow').style.display = 'flex';
                 document.getElementById('resMonthlyDraw').innerText = "NT$ " + Math.round(totalCashDraw / months).toLocaleString();
             } else {
