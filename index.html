@@ -374,9 +374,9 @@
                         <span class="result-value" id="resTotalDraw">NT$ 0</span>
                     </div>
                     
-                    <div id="monthlyDrawRow" class="result-row" style="background:#FFF3E0; padding:5px; border-radius:4px; margin-top:5px; display:none;">
-                        <span style="font-weight:bold; color:var(--primary-color);">平均每月約領</span>
-                        <span class="result-value" id="resMonthlyDraw" style="color:var(--primary-color);">NT$ 0</span>
+                    <div id="monthlyDrawRow" class="result-row" style="background:#FFF3E0; padding:15px; border-radius:8px; margin-top:15px; display:none; align-items: center;">
+                        <span style="font-weight:bold; color:var(--primary-color); font-size: 1.1rem;">平均每月約領</span>
+                        <span class="result-value" id="resMonthlyDraw" style="color:var(--primary-color); font-size: 1.8rem;">NT$ 0</span>
                     </div>
                 </div>
 
@@ -426,10 +426,10 @@
 
         window.onload = function() {
             renderTimeInputs();
-            renderSmartAdvice(); // 初始載入也執行一次建議
+            renderSmartAdvice(); 
         };
 
-        // --- 核心功能：雙重建議系統 (Smart Advice) ---
+        // --- 核心功能：雙重建議系統 ---
         function renderSmartAdvice() {
             const age = parseInt(document.getElementById('userAge').value);
             const goal = document.getElementById('investmentGoal').value;
@@ -437,7 +437,7 @@
             
             let htmlContent = "";
 
-            // 1. 年齡建議 (恢復您喜歡的功能)
+            // 1. 年齡建議
             if (age) {
                 let ageAdvice = "";
                 if (age >= 18 && age <= 35) {
@@ -450,7 +450,7 @@
                 htmlContent += `<div style="margin-bottom:10px;">${ageAdvice}</div>`;
             }
 
-            // 2. 目標建議 (如果用戶有選目標)
+            // 2. 目標建議
             if (goal !== 'none') {
                 let goalAdvice = "";
                 if (goal === 'cashflow') {
@@ -460,12 +460,10 @@
                 } else if (goal === 'accumulation') {
                     goalAdvice = "<span class='advice-section-title'>針對【資產增值】配置：</span>建議利用「定期定額」搭配「複利滾存」，透過時間平攤成本，適合累積教育金。";
                 }
-                // 加上分隔線，疊加顯示
                 if(htmlContent !== "") htmlContent += "<hr style='border:0; border-top:1px dashed #D7CCC8; margin:8px 0;'>";
                 htmlContent += `<div>${goalAdvice}</div>`;
             }
 
-            // 顯示邏輯
             if (htmlContent !== "") {
                 adviceBox.style.display = 'block';
                 adviceBox.innerHTML = htmlContent;
@@ -474,11 +472,9 @@
             }
         }
 
-        // --- 目標連動設定 (自動帶入參數) ---
+        // --- 目標連動設定 ---
         function applyInvestmentGoal() {
             const goal = document.getElementById('investmentGoal').value;
-            
-            // 欄位 DOM
             const principalInput = document.getElementById('principal');
             const insuranceInput = document.getElementById('insuranceAmount');
             const typeCashRadio = document.getElementById('typeCash');
@@ -496,9 +492,8 @@
                 switchMode('regular'); 
                 typeCompoundRadio.checked = true;
             }
-            
             renderTimeInputs();
-            renderSmartAdvice(); // 更新建議文字
+            renderSmartAdvice(); 
         }
 
         // --- 模式切換 ---
