@@ -482,9 +482,9 @@
         <div class="disclaimer-box">
             <h4>注意事項與風險揭露：</h4>
             <ul>
-                <li><strong>月領金額說明：</strong>「每月約領」金額為預估投資獲利全額領出 (投資總額 × 報酬率)，以展現最大現金流效益。實際帳戶價值會因扣除保險成本而變動。</li>
+                <li><strong>月領金額說明：</strong>「每月約領」金額固定為「初始保單面額 × 預估報酬率 / 12」。此金額為鎖定值，不隨帳戶餘額扣除保險成本而變動，以確保穩定現金流試算。</li>
                 <li><strong>槓桿本金：</strong>自有實付本金 = 保單總面額 - 貸款金額。利用銀行低利資金創造利差。</li>
-                <li><strong>實際淨報酬：</strong>「實際淨報酬率」已扣除累積之貸款利息與保險成本，並排除身故保額，反映最真實的獲利能力。</li>
+                <li><strong>保險成本扣除：</strong>本試算模擬「危險保費」由帳戶價值中逐月扣除，不影響每月領取金額。</li>
                 <li><strong>投資風險：</strong>本試算報酬率僅供參考，不代表未來績效，保戶需自負投資盈虧。</li>
             </ul>
         </div>
@@ -501,10 +501,9 @@
         window.onload = function() {
             renderTimeInputs();
             renderSmartAdvice(); 
-            updateLoanHint(); // 初始化顯示自有資金提示
+            updateLoanHint(); 
         };
 
-        // 監聽貸款輸入，即時更新提示
         document.getElementById('loanAmount').addEventListener('input', updateLoanHint);
         document.getElementById('principal').addEventListener('input', updateLoanHint);
         
@@ -522,7 +521,6 @@
             }
         }
         
-        // 監聽貸款類型切換
         const loanRadios = document.querySelectorAll('input[name="loanType"]');
         loanRadios.forEach(radio => radio.addEventListener('change', updateLoanHint));
 
@@ -679,17 +677,17 @@
                 principalInput = 0; 
             }
 
-            // --- 關鍵修正：自有資金計算 ---
+            // --- 自有資金與初始本金計算 ---
             let ownCapital = 0;
             let totalPolicyValue = 0;
 
             if (currentMode === 'lumpSum') {
                 if (isLeverage && loanType === 'keep') {
-                    // 槓桿模式：保單 100萬, 貸款 40萬 -> 自有 60萬
+                    // 槓桿模式
                     totalPolicyValue = principalInput;
                     ownCapital = principalInput - loanAmount;
                 } else if (isLeverage && loanType === 'invest') {
-                    // 增貸模式：自有 100萬, 貸款 40萬 -> 保單 140萬
+                    // 增貸模式
                     totalPolicyValue = principalInput + loanAmount;
                     ownCapital = principalInput;
                 } else {
@@ -698,7 +696,6 @@
                     ownCapital = principalInput;
                 }
             } else {
-                // 定期定額暫不討論槓桿
                 totalPolicyValue = 0; 
                 ownCapital = 0; 
             }
@@ -713,6 +710,13 @@
             let payMonths = payYears * 12;
             let monthlyInvestRate = (rate / 100) / 12;
             let monthlyLoanRate = (loanRate / 100) / 12;
+            
+            // --- 核心修改：固定配息金額 ---
+            // 鎖定配息基準：(初始總額 * 利率) / 12
+            let fixedDrawAmount = 0;
+            if (currentMode === 'lumpSum' && payoutType === 'cash') {
+                fixedDrawAmount = totalPolicyValue * monthlyInvestRate;
+            }
 
             for (let m = 0; m < months; m++) {
                 let currentAge = age + Math.floor(m / 12);
@@ -722,31 +726,33 @@
                     accumulatedOwnCapital += monthlyPremium;
                 }
 
-                // 1. 計算 Gross Gain (全額獲利)
+                // 1. Gain
                 let gain = currentAccountValue * monthlyInvestRate;
 
-                // 2. 計算保險成本
+                // 2. Insurance Cost
                 let riskAmount = Math.max(sumAssured - currentAccountValue, 0);
                 let coiRate = getMonthlyCOIRate(currentAge); 
                 let costOfInsurance = (riskAmount / 10000) * coiRate;
                 totalInsurancePaid += costOfInsurance;
 
-                // 3. 計算利息成本 (背景統計)
+                // 3. Loan Interest
                 let loanInterest = loanAmount * monthlyLoanRate;
                 totalLoanInterestPaid += loanInterest;
 
-                // 4. 處理領取邏輯
+                // 4. Payout Logic
                 if (payoutType === 'cash') {
-                    // 關鍵：月領金額 = 帳戶價值 * 報酬率 (不扣成本，展現最大現金流)
-                    let monthlyDraw = currentAccountValue * monthlyInvestRate; 
-                    totalCashDraw += monthlyDraw;
+                    // 若是定期定額選配息，通常也是依照當下價值，但這裡為了簡單，定期定額通常選複利
+                    // 若是單筆，使用 Fixed Draw
+                    let draw = (currentMode === 'lumpSum') ? fixedDrawAmount : (currentAccountValue * monthlyInvestRate);
+                    
+                    totalCashDraw += draw;
                     
                     // 帳戶變動：
                     currentAccountValue += gain; // 加獲利
-                    currentAccountValue -= monthlyDraw; // 領出獲利
-                    currentAccountValue -= costOfInsurance; // 扣保費 (帳戶吸收)
+                    currentAccountValue -= draw; // 減配息 (固定金額)
+                    currentAccountValue -= costOfInsurance; // 減保費
                 } else {
-                    // 複利滾存
+                    // 複利
                     currentAccountValue += gain;
                     currentAccountValue -= costOfInsurance;
                 }
@@ -756,38 +762,23 @@
             document.getElementById('resAccountValue').innerText = "NT$ " + Math.round(currentAccountValue).toLocaleString();
             document.getElementById('resTotalDraw').innerText = "NT$ " + Math.round(totalCashDraw).toLocaleString();
 
-            // 總資產效益 = 活著能拿到的錢 (帳戶 + 現金)
             let totalBenefit = currentAccountValue + totalCashDraw;
             document.getElementById('resTotalBenefit').innerText = "NT$ " + Math.round(totalBenefit).toLocaleString();
             
-            // 顯示自有本金
             document.getElementById('resOwnCapital').innerText = "NT$ " + Math.round(accumulatedOwnCapital).toLocaleString();
 
-            // 淨獲利 = (帳戶餘額 + 已領現金) - (本金 + 貸款本金若需歸還) - 總利息? 
-            // 不，這裡的淨獲利是指 "獲利金額"，不含還款。
-            // 淨獲利 = 總效益 - 投入的總資金(含貸款部分因為那是本金) 
-            // 修正：依照老闆指示，獲利要扣除成本。
-            // 簡單算： Net Profit = Total Benefit - (Own Capital + Loan Amount) - Total Interest
-            // 這樣才是真正的 "淨賺"
-            
-            let debtToReturn = isLeverage ? loanAmount : 0;
-            // 總成本 = 自有資金 + 需償還貸款 + 已付利息
-            // 但 Account Value 已經內含了 (Principal + Loan)，所以只要扣掉初始值
-            
             let initialTotal = (currentMode === 'lumpSum') ? totalPolicyValue : accumulatedOwnCapital;
             let rawProfit = totalBenefit - initialTotal; 
-            // rawProfit 已經反映了保費扣除 (因為 AccountValue 變少了)
             
             let finalNetProfit = rawProfit - totalLoanInterestPaid;
 
             document.getElementById('resNetProfit').innerText = (finalNetProfit >=0 ? "+" : "") + "NT$ " + Math.round(finalNetProfit).toLocaleString();
 
-            // 月領顯示
             if(payoutType === 'cash') {
                 document.getElementById('monthlyDrawRow').style.display = 'flex';
-                // 為了符合 "100萬 16% = 13333" 的直覺
-                let avgDraw = (totalPolicyValue > 0) ? (totalPolicyValue * (rate/100) / 12) : (totalCashDraw / months);
-                document.getElementById('resMonthlyDraw').innerText = "NT$ " + Math.round(avgDraw).toLocaleString();
+                // 月領金額顯示：若是單筆，直接顯示那筆固定的 fixedDrawAmount
+                let displayDraw = (currentMode === 'lumpSum') ? fixedDrawAmount : (totalCashDraw / months);
+                document.getElementById('resMonthlyDraw').innerText = "NT$ " + Math.round(displayDraw).toLocaleString();
             } else {
                 document.getElementById('monthlyDrawRow').style.display = 'none';
             }
@@ -801,10 +792,6 @@
                  document.getElementById('roeBlock').style.display = 'block';
                  
                  // 1. 槓桿套利 ROI (Arbitrage ROI)
-                 // 分子：(總保單獲利 - 貸款利息) --- 不扣保費
-                 // 分母：自有本金
-                 
-                 // 年化保單獲利 (不含保費) = 總保單價值 * 報酬率
                  let annualPolicyGain = totalPolicyValue * (rate / 100);
                  let annualLoanCost = loanAmount * (loanRate / 100);
                  let annualArbitrageNet = annualPolicyGain - annualLoanCost;
@@ -812,24 +799,20 @@
                  let arbitrageROI = (annualArbitrageNet / accumulatedOwnCapital) * 100;
                  document.getElementById('resArbitrageROE').innerText = arbitrageROI.toFixed(2) + "%";
 
-                 // 2. 實際淨報酬 (Net ROI) - 什麼都扣
-                 // 使用最後算出來的 finalNetProfit (總淨利) / 年數 / 本金
+                 // 2. 實際淨報酬 (Net ROI)
                  let netROI = (finalNetProfit / totalYears / accumulatedOwnCapital) * 100;
                  document.getElementById('resNetROE').innerText = netROI.toFixed(2) + "%";
                  
-                 // 顯示成本數字
                  document.getElementById('resTotalInterestCost').innerText = "- NT$ " + Math.round(totalLoanInterestPaid).toLocaleString();
                  document.getElementById('resTotalInsuranceCost').innerText = "- NT$ " + Math.round(totalInsurancePaid).toLocaleString();
 
             } else if (currentMode === 'lumpSum' && accumulatedOwnCapital > 0) {
                  document.getElementById('roeBlock').style.display = 'block';
                  
-                 // 一般 ROI (不扣保費 - 模擬純投資)
                  let annualPolicyGain = totalPolicyValue * (rate / 100);
                  let normalROI = (annualPolicyGain / accumulatedOwnCapital) * 100;
                  document.getElementById('resArbitrageROE').innerText = normalROI.toFixed(2) + "%"; 
                  
-                 // 淨 ROI (扣保費)
                  let netROI = (finalNetProfit / totalYears / accumulatedOwnCapital) * 100;
                  document.getElementById('resNetROE').innerText = netROI.toFixed(2) + "%";
                  
