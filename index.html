@@ -204,15 +204,15 @@
             font-family: Arial, sans-serif; line-height: 1.1;
         }
 
-        /* --- 修正後的月領金額區塊 (電腦版預設) --- */
+        /* 電腦版月領區塊 */
         #monthlyDrawRow {
             background: #FFF3E0;
             padding: 20px;
             border-radius: 10px;
             margin-top: 15px;
-            display: none; /* JS 控制顯示 */
+            display: none; 
             align-items: center;
-            justify-content: space-between; /* 電腦版左右撐開 */
+            justify-content: space-between; 
             border: 2px solid var(--accent-color);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
@@ -223,38 +223,61 @@
             font-weight: 800;
         }
 
-        /* --- 手機版專用 (排版大修正) --- */
+        /* 手機版專用 (月領放大 + 上下排列) */
         @media screen and (max-width: 600px) {
-            /* 1. 將該區塊改為「垂直堆疊」 */
             #monthlyDrawRow {
-                flex-direction: column; /* 上下排列 */
+                flex-direction: column;
                 justify-content: center;
-                text-align: center; /* 文字置中 */
+                text-align: center;
                 padding: 15px;
             }
-
-            /* 2. 標籤文字 (平均每月約領) */
             #monthlyDrawRow span:first-child {
                 font-size: 1.1rem !important;
-                margin-bottom: 5px; /* 與下方數字拉開距離 */
+                margin-bottom: 5px;
                 width: 100%;
                 display: block;
             }
-
-            /* 3. 數字金額 (NT$ 9,908) */
             #resMonthlyDraw {
-                font-size: 2.5rem !important; /* 數字維持超大 */
+                font-size: 2.5rem !important;
                 width: 100%;
                 display: block;
                 line-height: 1.2;
             }
-            
             .big-number {
                 font-size: 2.5rem !important;
             }
         }
 
-        /* 警示文字 */
+        /* ROE 區塊特別樣式 */
+        .roe-container {
+            background-color: white;
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .roe-title {
+            color: #555;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .roe-value {
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            font-weight: 800;
+            display: block;
+            line-height: 1.1;
+        }
+        .roe-sub-value {
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            border-top: 1px dashed #ccc;
+            padding-top: 8px;
+        }
+
         .disclaimer-box {
             margin-top: 30px; padding: 15px;
             background-color: #f5f5f5; border-top: 2px solid #ddd;
@@ -275,7 +298,6 @@
     </header>
 
     <div class="container">
-        
         <div class="card">
             <h2 class="card-title">您想過這樣的未來嗎？</h2>
             <ul class="hook-list">
@@ -301,7 +323,6 @@
                     <option value="accumulation">3. 資產快速增值 (購屋/圓夢)</option>
                 </select>
             </div>
-            
             <div id="advice-text" class="advice-box"></div>
         </div>
 
@@ -385,15 +406,12 @@
             <button class="btn" onclick="calculate()">開始試算</button>
 
             <div class="result-box" id="resultArea">
-                
                 <h3 style="margin-top:0; color: var(--primary-color);">試算結果 (<span id="resYearLabel">10</span>年後)</h3>
 
                 <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid var(--accent-color); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                     <div style="font-size: 1rem; color: #666; font-weight:bold;">總資產效益 (本金+獲利)</div>
                     <div style="font-size: 0.8rem; color: #999; margin-bottom: 5px;">(含：帳戶餘額 + 累積已領現金)</div>
-                    
                     <div class="big-number" id="resTotalBenefit">NT$ 0</div>
-
                     <div style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px; font-size: 0.9rem;">
                         <div class="result-row">
                             <span>累積投入本金</span>
@@ -412,17 +430,14 @@
 
                 <div style="background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; text-align:left;">
                     <h4 style="margin:0 0 10px 0; color: var(--primary-color); border-bottom: 2px solid #eee; padding-bottom:5px;">資產分佈明細</h4>
-                    
                     <div class="result-row">
                         <span>A. 保單帳戶餘額</span>
                         <span class="result-value" id="resAccountValue">NT$ 0</span>
                     </div>
-                    
                     <div class="result-row">
                         <span>B. 累積已領現金</span>
                         <span class="result-value" id="resTotalDraw">NT$ 0</span>
                     </div>
-                    
                     <div id="monthlyDrawRow" class="result-row">
                         <span style="font-weight:bold; color:var(--primary-color); font-size: 1.1rem;">平均每月約領</span>
                         <span id="resMonthlyDraw">NT$ 0</span>
@@ -441,12 +456,19 @@
                     </div>
                 </div>
 
-                <div id="roeBlock" style="margin-top: 15px; padding-top: 10px; border-top: 2px solid var(--accent-color); display:none;">
-                    <div class="result-row">
-                        <span>自有資金年化報酬率 (ROE)</span>
-                        <span class="result-value" id="resROE" style="font-size: 1.5rem; color: var(--primary-color);">0%</span>
+                <div id="roeBlock" style="display:none;" class="roe-container">
+                    
+                    <span class="roe-title">槓桿套利報酬率 (Arbitrage ROE)</span>
+                    <span class="roe-value" id="resArbitrageROE">0%</span>
+                    <small style="color:#666; font-size:0.8rem;">(純資金操作：投資獲利 - 貸款成本 / 自有本金)</small>
+                    
+                    <div class="roe-sub-value">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span>保單實質報酬率 (Net ROE)</span>
+                            <span id="resNetROE" style="font-weight:bold; color:#555;">0%</span>
+                        </div>
+                        <span style="font-size:0.75rem;">(已扣除保險成本與貸款利息)</span>
                     </div>
-                    <small style="color:#666;">(已扣除貸款利息成本)</small>
                 </div>
 
             </div>
@@ -456,9 +478,9 @@
             <h4>注意事項與風險揭露：</h4>
             <ul>
                 <li><strong>總資產效益說明：</strong>上述金額為「保單帳戶餘額」加上「累積已領回之現金」。若選擇每月領現，帳戶餘額可能因扣除保費與配息而低於原始本金。</li>
-                <li><strong>定期定額：</strong>試算假設每月期初投入。若設定「繳費年期」小於「總持有年期」，期滿後不再投入資金，但帳戶價值持續依預估報酬率複利滾存並扣除保險成本。</li>
-                <li><strong>保險成本扣除：</strong>本試算已模擬「危險保費」隨年齡增長之扣除機制 (假設甲型壽險)，且帳戶價值越高，危險保費扣除越少。</li>
-                <li><strong>投資風險：</strong>本試算報酬率僅供參考，不代表未來績效，保戶需自負投資盈虧。基金配息來源可能為本金。</li>
+                <li><strong>套利報酬率：</strong>「槓桿套利報酬率」為純粹資金運作之預估收益，不包含保險相關費用扣除，僅供評估資金運用效益使用。</li>
+                <li><strong>保險成本扣除：</strong>本試算已模擬「危險保費」隨年齡增長之扣除機制 (假設甲型壽險)。</li>
+                <li><strong>投資風險：</strong>本試算報酬率僅供參考，不代表未來績效，保戶需自負投資盈虧。</li>
             </ul>
         </div>
 
@@ -469,8 +491,6 @@
     </footer>
 
     <script>
-        /* --- JavaScript 核心邏輯區 --- */
-
         let currentMode = 'lumpSum';
 
         window.onload = function() {
@@ -478,12 +498,10 @@
             renderSmartAdvice(); 
         };
 
-        // --- 核心功能：雙重建議系統 ---
         function renderSmartAdvice() {
             const age = parseInt(document.getElementById('userAge').value);
             const goal = document.getElementById('investmentGoal').value;
             const adviceBox = document.getElementById('advice-text');
-            
             let htmlContent = "";
 
             if (age) {
@@ -519,7 +537,6 @@
             }
         }
 
-        // --- 目標連動設定 ---
         function applyInvestmentGoal() {
             const goal = document.getElementById('investmentGoal').value;
             const principalInput = document.getElementById('principal');
@@ -709,7 +726,6 @@
             }
 
             if(payoutType === 'cash') {
-                // 原本是用 .style.display = 'flex'，但為了手機版我們改成 block 或 flex 皆可，但為了排版邏輯，這邊使用 display:flex 搭配 CSS 中的 media query 調整方向
                 document.getElementById('monthlyDrawRow').style.display = 'flex';
                 document.getElementById('resMonthlyDraw').innerText = "NT$ " + Math.round(totalCashDraw / months).toLocaleString();
             } else {
@@ -720,10 +736,37 @@
             document.getElementById('resDeathBenefit').innerText = "NT$ " + Math.round(deathBenefit).toLocaleString();
             document.getElementById('resSumAssured').innerText = "NT$ " + Math.round(sumAssured).toLocaleString();
 
-            if (currentMode === 'lumpSum' && accumulatedPrincipal > 0) {
+            // --- 核心修正：槓桿 ROE 計算區 ---
+            if (currentMode === 'lumpSum' && accumulatedPrincipal > 0 && isLeverage) {
                  document.getElementById('roeBlock').style.display = 'block';
-                 let annualizedROE = (netProfit / totalYears / accumulatedPrincipal) * 100;
-                 document.getElementById('resROE').innerText = annualizedROE.toFixed(2) + "%";
+                 
+                 // 1. 計算純投資套利 ROE (Arbitrage ROE)
+                 // 公式：(總投入*報酬率 - 貸款*貸款利率) / 自有本金
+                 // 這裡我們取年化值來顯示
+                 let totalInvestAmount = accumulatedPrincipal; // 自有
+                 if(loanType === 'invest') totalInvestAmount += loanAmount; // 自有+貸款
+                 
+                 // 年獲利
+                 let annualGain = totalInvestAmount * (rate / 100);
+                 // 年利息
+                 let annualCost = loanAmount * (loanRate / 100);
+                 // 淨賺
+                 let annualNet = annualGain - annualCost;
+                 // ROE
+                 let arbitrageROE = (annualNet / accumulatedPrincipal) * 100;
+                 
+                 document.getElementById('resArbitrageROE').innerText = arbitrageROE.toFixed(2) + "%";
+
+                 // 2. 計算保單實質 ROE (Net ROE) - 含保費扣除
+                 let annualizedNetROE = (netProfit / totalYears / accumulatedPrincipal) * 100;
+                 document.getElementById('resNetROE').innerText = annualizedNetROE.toFixed(2) + "%";
+
+            } else if (currentMode === 'lumpSum' && accumulatedPrincipal > 0) {
+                 // 沒有槓桿時，顯示一般 ROE
+                 document.getElementById('roeBlock').style.display = 'block';
+                 let annualizedNetROE = (netProfit / totalYears / accumulatedPrincipal) * 100;
+                 document.getElementById('resArbitrageROE').innerText = annualizedNetROE.toFixed(2) + "%";
+                 document.getElementById('resNetROE').innerText = annualizedNetROE.toFixed(2) + "%";
             } else {
                 document.getElementById('roeBlock').style.display = 'none';
             }
